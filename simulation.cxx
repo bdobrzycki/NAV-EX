@@ -3,10 +3,10 @@
 using namespace GrapheneMath;
 
 Simulation::Simulation()
-    : zeroVec( 0.0f, 0.0f, 0.0f )
-    ,  xAxis( 5.0f, 0.0f, 0.0f )
-    ,  yAxis( 0.0f, 5.0f, 0.0f )
-    ,  zAxis( 0.0f, 0.0f, 5.0f )
+    :  zeroVec( 0.0f, 0.0f, 0.0f )
+    ,  xAxis( 10.0f, 0.0f, 0.0f )
+    ,  yAxis( 0.0f, 10.0f, 0.0f )
+    ,  zAxis( 0.0f, 0.0f, 10.0f )
     ,  colorRed(   1.0f, 0.0f, 0.0f )
     ,  colorGreen( 0.0f, 1.0f, 0.0f )
     ,  colorBlue(  0.0f, 0.0f, 1.0f )
@@ -65,28 +65,7 @@ void Simulation::Update()
       
       m_dsp.SetRefreshRateHz( 1.0f ); //< every 1 sec
       m_dsp.Print( m_time );
-         
-      m_time += m_timeDelta;
-}
-    
-    void Simulation::Draw()
-    {
-      // Draw World reference frame.
-      xAxisLine.Draw();
-      yAxisLine.Draw();
-      zAxisLine.Draw();
-      
-      m_leg01.Draw();
-      
-      m_wv.Draw();
-      
-      // TODO Add test to verify if the sim is still a real time sim.
-      // Measure the time to execute the update function and compare against the
-      // time of frame (already calculated). 
-      
-      // TODO Move non-debug draw stuff to update.
-      
-      
+
       // Const vel in aircraft reference frame.
       const Vector3<float> TAS( 95.f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
       Vector3<float> v (0.f, 0.f, 0.f);  //95 kts = 95 NM/h
@@ -97,7 +76,6 @@ void Simulation::Update()
       // Add global wind velocity to aircraft's global velocity.
       v = v + m_wv.GetWV();
       
-      std::ostringstream ostr;
       ostr << " V/W: " << m_wv.GetDirectionDeg() << "°/" << m_wv.GetWV().Mag() << " [kts] ";
       m_dsp.Write(0, 8, ostr.str() );       
       ostr.str("");
@@ -125,15 +103,33 @@ void Simulation::Update()
       ostr << " DST TR : " << dstTraveledNM << " [NM] ";
       m_dsp.Write(0, 15, ostr.str() );       
       ostr.str("");
-      ostr.clear();  
-      
-      GLLine vel ( 0.0, v, colorRed );
-      vel.Draw();
-      
+      ostr.clear();
+  
       // vel is in [kts] = [NM/h], the timestep in [s] hence it needs to be converted
       // to [h] - therefore the division by 3600 
       m_C152.SetPosition( m_C152.GetPosition() + v.ScalarMult( m_timeDelta / 3600.0f ) );
-        
-      m_C152.Draw();
-      
-    }
+
+      m_C152.SetVelocity( v ); //< vel is in [kts] = [NM/h]
+
+      // TODO Add test to verify if the sim is still a real time sim.
+      // Measure the time to execute the update function and compare against the
+      // time of frame (already calculated).
+
+      m_time += m_timeDelta;
+}
+
+void Simulation::Draw()
+{
+    // Draw World reference frame.
+    xAxisLine.Draw();
+    yAxisLine.Draw();
+    zAxisLine.Draw();
+
+    m_leg01.Draw();
+    m_wv.Draw();
+
+    GLLine vel ( 0.0, m_C152.GetVelocity(), colorRed );
+    vel.Draw();
+
+    m_C152.Draw();
+}

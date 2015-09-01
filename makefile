@@ -8,11 +8,12 @@ CXXFLAGS = -Wall -std=c++0x
 GLFLAGS = -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrandr -lpthread -lXi
 
 link: compile
-	$(CC) main.o xlocator.o varrow2d.o wv.o navleg.o alphanumdisplay.o simulation.o -o Navex $(CXXFLAGS) $(GLFLAGS)
+	$(CC) main.o aeroplane.o xlocator.o varrow2d.o wv.o navleg.o alphanumdisplay.o simulation.o -o Navex $(CXXFLAGS) $(GLFLAGS)
 	rm *.o
 
 compile:
 	$(CC) $(CXXFLAGS) -c main.cxx
+	$(CC) $(CXXFLAGS) -c aeroplane.cxx
 	$(CC) $(CXXFLAGS) -c xlocator.cxx
 	$(CC) $(CXXFLAGS) -c varrow2d.cxx
 	$(CC) $(CXXFLAGS) -c wv.cxx

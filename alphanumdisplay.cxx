@@ -6,7 +6,11 @@ AlphanumDisplay::AlphanumDisplay( char displayBckg )
   ,  m_refreshRate( 10.0f )
   ,  m_lastRefreshTime( 0.0f )
   {
+    m_ostr.str("");
+    m_ostr.clear();
+
     m_displayBckg = displayBckg;
+
     Clear();
   }
   
@@ -24,22 +28,35 @@ AlphanumDisplay::AlphanumDisplay( char displayBckg )
     }
     
     // Hello message.
-    Write( Display::eWidth - c_helloMessage.length() - 1, 1, c_helloMessage );
-    
-    std::ostringstream ostr;
-    ostr << "Resolution: " << Display::eWidth << " x " << Display::eHeight 
-         << ", refresh rate: " << m_refreshRate << " Hz";
-    Write( 0, 1, ostr.str() );
+    GetStream() << c_helloMessage;
+    WriteFromStream(Display::eWidth - c_helloMessage.length() - 1, 1);
+
+    GetStream() << "Resolution: " << Display::eWidth << " x " << Display::eHeight 
+                << ", refresh rate: " << m_refreshRate << " Hz";
+    WriteFromStream(0, 1);
   }
   
-  // Write to display.
-  void AlphanumDisplay::Write( int column, int row, const std::string& text )
+  //-----------------------------------------------------------------------------
+  // Returns reference to the cleared member ostringstream.
+  std::ostringstream& AlphanumDisplay::GetStream()
   {
-      m_displayGrid.replace( (Display::eWidth * row) + column, text.length(), text );
+      m_ostr.str("");
+      m_ostr.clear();
+      return m_ostr;
   }
-  
-  // Print display to console.
-  void AlphanumDisplay::Print( float time )
+ 
+  // Example of usage in Client code:
+  // 1. Get the osstr reference:
+  // this.GetStream() << "V/W: " << m_wv.GetDirectionDeg() << "°/" << m_wv.GetWV().Mag() << " [kts] ";
+  // 2. write:
+  // this.WriteFromStream(0, 8);
+  void AlphanumDisplay::WriteFromStream( int column, int row )
+  {
+      m_displayGrid.replace( (Display::eWidth * row) + column, m_ostr.str().length(), m_ostr.str() );
+  }
+
+  // display to console
+  void AlphanumDisplay::Refresh( float time )
   {
       // 60 Hz -> 60 updates -> 1 [s]
       //          1  updates -> x [s]

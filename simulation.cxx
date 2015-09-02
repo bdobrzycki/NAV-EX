@@ -44,27 +44,10 @@ void Simulation::Update()
       // 1 -block buffer swapping until the monitor has done at least one vertical
       // retrace since the last buffer swap. This caps your framerate at your
       // monitor's refresh rate.
-       
-      // Test the screen: 
-      std::ostringstream ostr;
-      ostr << " FPS: " << fps << " ";
-      m_dsp.Write(0, 3, ostr.str() );
-      
-      ostr.str("");
-      ostr.clear();
-      
-      ostr << " Time: " << m_time << " [s] ";
-      m_dsp.Write(0, 4, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
-      ostr << " Time: " << m_time / 60.0f << " [min] ";
-      m_dsp.Write(0, 5, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
-      m_dsp.SetRefreshRateHz( 1.0f ); //< every 1 sec
-      m_dsp.Print( m_time );
+
+      m_dsp.Write(0, 3, "FPS", fps, "" );
+      m_dsp.Write(0, 4, "Time:", m_time, "[s]" );
+      m_dsp.Write(0, 5, "Time:", m_time / 60.0f, "[min]" );
 
       // Const vel in aircraft reference frame.
       const Vector3<float> TAS( 95.f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
@@ -75,35 +58,18 @@ void Simulation::Update()
       
       // Add global wind velocity to aircraft's global velocity.
       v = v + m_wv.GetWV();
+
+      m_dsp.GetStream() << "V/W: " << m_wv.GetDirectionDeg() << "°/" << m_wv.GetWV().Mag() << " [kts] ";
+      m_dsp.WriteFromStream(0, 8);
       
-      ostr << " V/W: " << m_wv.GetDirectionDeg() << "°/" << m_wv.GetWV().Mag() << " [kts] ";
-      m_dsp.Write(0, 8, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
-      const float maxDriftAngleDeg = m_wv.GetMaxDriftAngleDeg( v.Mag() );
-      ostr << " MAX DRIFT: " << maxDriftAngleDeg << "° ";
-      m_dsp.Write(0, 9, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
-      ostr << " TAS: " << TAS.Mag() << " [kts] ";
-      m_dsp.Write(0, 12, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
-      ostr << " GS : " << v.Mag() << " [kts] ";
-      m_dsp.Write(0, 13, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
-      
+      const float maxDriftAngleDeg = m_wv.GetMaxDriftAngleDeg( v.Mag() );   
+      m_dsp.Write(0, 9, "MAX DRIFT: ", maxDriftAngleDeg, "" );
+      m_dsp.Write(0, 12, "TAS: ", TAS.Mag(), "[kts]" ); 
+      m_dsp.Write(0, 13, "GS: ", v.Mag(), "[kts]" ); 
+
       static float dstTraveledNM =  0.0f;
       dstTraveledNM += ( v.ScalarMult( m_timeDelta / 3600.0f ) ).Mag();
-      
-      ostr << " DST TR : " << dstTraveledNM << " [NM] ";
-      m_dsp.Write(0, 15, ostr.str() );       
-      ostr.str("");
-      ostr.clear();
+      m_dsp.Write(0, 15, "DST TR: ", dstTraveledNM, "[NM]" ); 
   
       // vel is in [kts] = [NM/h], the timestep in [s] hence it needs to be converted
       // to [h] - therefore the division by 3600 
@@ -111,11 +77,15 @@ void Simulation::Update()
 
       m_C152.SetVelocity( v ); //< vel is in [kts] = [NM/h]
 
+      m_dsp.SetRefreshRateHz( 1.0f ); //< every 1 sec
+      m_dsp.Refresh( m_time );
+
       // TODO Add test to verify if the sim is still a real time sim.
       // Measure the time to execute the update function and compare against the
       // time of frame (already calculated).
 
       m_time += m_timeDelta;
+
 }
 
 void Simulation::Draw()

@@ -19,11 +19,12 @@ private:
     }; 
   };
 
-  const std::string c_helloMessage;
-  std::string       m_displayGrid;   
-  char              m_displayBckg;     //< display background char
-  float             m_refreshRate;     //< Hz
-  float             m_lastRefreshTime; //< s
+  const std::string   c_helloMessage;
+  std::string         m_displayGrid;   
+  char                m_displayBckg;     //< display background char
+  float               m_refreshRate;     //< Hz
+  float               m_lastRefreshTime; //< s
+  std::ostringstream  m_ostr;
 
 public:
   AlphanumDisplay( char displayBckg = ' ' );
@@ -39,12 +40,21 @@ public:
   
   inline void SetRefreshRateHz( float refreshRate ) { m_refreshRate = refreshRate; }
   void Clear();
- 
+
   // Write to display.
-  void Write( int column, int row, const std::string& text );
-  
-  // Print display to console.
-  void Print( float time );
+  template<typename T>
+  void Write( int column, int row, const std::string& name, const T& value, const std::string& unit )
+  {
+      std::ostringstream ostr;
+      ostr << name << " " << value << " " << unit << " ";
+      m_displayGrid.replace( (Display::eWidth * row) + column, ostr.str().length(), ostr.str() );
+  }
+
+  std::ostringstream& GetStream();
+  void WriteFromStream( int column, int row );
+
+  // display to console
+  void Refresh( float time );
 };
 
 #endif //__ALPHANUM_DISPLAY_H__

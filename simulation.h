@@ -13,6 +13,7 @@
 #include "varrow2d.h"
 #include "wv.h"
 #include "navleg.h"
+#include "triangle.h"
 #include "aeroplane.h"
 
 // Flight sim
@@ -47,6 +48,8 @@ private:
     float         m_time;
     float         m_timeDelta;
 
+    TriangleOfVelocities m_triangle;
+
     AlphanumDisplay m_dsp;
     
 public:
@@ -54,6 +57,8 @@ public:
     void Initialise();
     void Update();
     void Draw();
+
+    void calcTriangle();
 };
 
 #endif //__SIMULATION_H__

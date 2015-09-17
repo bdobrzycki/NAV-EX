@@ -53,6 +53,10 @@ public:
     TriangleOfVelocities();
 
     void getData();
+    void solve();
+    
+private:
+    void solveVecDirLength();
 
 };
 

@@ -15,8 +15,8 @@ Simulation::Simulation()
     ,  xAxisLine( zeroVec, xAxis, colorRed )
     ,  yAxisLine( zeroVec, yAxis, colorGreen )
     ,  zAxisLine( zeroVec, zAxis, colorBlue )
-    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 270.0f, 19.0f )
-    ,  m_wv( 250.0f, 30.0f/*3600.0f*/ ) // --<<<--
+    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 270.0f, 18.0f )
+    ,  m_wv( 0.0f, 10.0f/*3600.0f*/ ) // --<<<--
     ,  m_time( 0.0f )
     ,  m_timeDelta(0.0f)
     ,  m_dsp(' ')
@@ -28,7 +28,7 @@ void Simulation::Initialise()
       m_atmosphereModel.PrintAtmosphericConditions( m_convert.FeetToMeters( 2700.0f ) );
 
       m_C152.SetPosition( m_leg01.getStartPos() );
-      m_C152.SetHDG( /*m_leg01.getTrack()*/ 263.8f );
+      m_C152.SetHDG( /*m_leg01.getTrack()*/ 276.0f );
 
       //m_triangle.getData();
       m_triangle.solve();
@@ -53,7 +53,7 @@ void Simulation::Update()
       m_dsp.Write(0, 5, "Time:", m_time / 60.0f, "[min]" );
 
       // Const vel in aircraft reference frame.
-      const Vector3<float> TAS( 95.f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
+      const Vector3<float> TAS( 102.0f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
       Vector3<float> v (0.f, 0.f, 0.f);  //95 kts = 95 NM/h
       v += TAS;
       // Convert the aircraft velocity from local aircraft's to global space. 

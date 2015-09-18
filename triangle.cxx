@@ -36,10 +36,10 @@ void TriangleOfVelocities::solveVecDirLength()
     // basic (most common example)
     // |0|0| 0 | 1 |1|1|1 |0 | (00011110)
     // vector (W/V), dir(TR), length(TAS)
-    double TR = 270.0;
-    double TAS = 95.0;
-    double W = 250.0;
-    double V = 30.0;
+    double TR = 290.0;
+    double TAS = 174.0;
+    double W = 240.0;
+    double V = 40.0;
     double HDG = 0.0; //<?
     double GS = 0.0;  //<?
 
@@ -69,9 +69,17 @@ void TriangleOfVelocities::solveVecDirLength()
     //std::cout << "GS2 " << GS2 << "\n";
     GS = (GS1 > 0) ? GS1 : GS2;
     std::cout << "GS " << GS << " [kts]" << "\n";
-    double HDG_TR_RAD = acos( (-V*V + TAS*TAS + GS*GS) / ( 2.0 * TAS * GS ) );
+    double HDG_TR_RAD = acos( (-V*V + TAS*TAS + GS*GS) / ( 2.0 * TAS * GS ) ); //< this is the drift angle DA
     double HDG_TR_DEG = Rad2Deg( HDG_TR_RAD );
-    HDG = TR - HDG_TR_DEG; //< might not be true for all cases
-    std::cout << "HDG " << HDG <<" [°T]" << "\n";;
+    // Polar to Cartesian
+    const double TRx = GS*cos( TR );
+    const double TRy = GS*sin( TR );
+    const double WVx = V*cos( W );
+    const double WVy = V*sin( W );
+    // 2D cross product
+    const double X = TRx*WVy - TRy*WVx; 
+    //std::cout << "X " << X << "\n";
+    HDG = ( X < 0.0f ) ? (TR + HDG_TR_DEG) : (TR - HDG_TR_DEG);
+    std::cout << "HDG " << HDG <<" [°T]" << "\n";
     std::cin >> W;
 }

@@ -1,5 +1,8 @@
 #include "triangle.h" 
 
+const double TriangleOfVelocities::THREE_SIXTY_DEG = 360.0;
+const double TriangleOfVelocities::ONE_EIGHTY_DEG  = 180.0;
+
 TriangleOfVelocities::TriangleOfVelocities()
     : m_mask( 0 )
     {}
@@ -55,26 +58,25 @@ void TriangleOfVelocities::solveVecDirLength()
     // basic (most common example)
     // |0|0| 0 | 1 |1|1|1 |0 | (00011110)
     // vector (W/V), dir(TR), length(TAS)
-    double TR  = 290.0;
-    double TAS = 174.0;
-    double W   = 240.0;
-    double W_FROM = W; //< keep the oryginal wind direction ("from")
-    double V   = 40.0;
+    double TR  = 150;
+    double TAS = 100.0;
+    double W   = 0.0;
+    double V   = 30.0;
     double HDG = 0.0; //<?
     double GS  = 0.0; //<?
 
     // Reverse Wind direction, handling edge cases.
-    if( abs( W - 180.0 ) < NUM_TOLERANCE ) //< wind is FROM 180 T (S)
+    if( abs( W - ONE_EIGHTY_DEG ) < NUM_TOLERANCE ) //< wind is FROM 180 T (S)
     {
         W = 0.0; // TO N
     }
     else if( abs( W ) < NUM_TOLERANCE ) //< wind is FROM 0 T (N)
     {
-        W = 180.0; // TO S
+        W = ONE_EIGHTY_DEG; // TO S
     }
     else
     {
-         W = ( W < 180.0 ) ? ( W + 180.0 ) : ( W - 180.0 ); // TO
+         W = ( W < ONE_EIGHTY_DEG ) ? ( W + ONE_EIGHTY_DEG ) : ( W - ONE_EIGHTY_DEG ); // TO
     }
     
     std::cout << "W(to) " << W <<" [°T]" << "\n";
@@ -95,23 +97,46 @@ void TriangleOfVelocities::solveVecDirLength()
     double HDG_TR_RAD = acos( (-V*V + TAS*TAS + GS*GS) / ( 2.0 * TAS * GS ) ); //< this is the drift angle DA
     double HDG_TR_DEG = Rad2Deg( HDG_TR_RAD );
 
-    if( W_FROM < TR )
-    {
-        std::cout << "DA " << HDG_TR_DEG << " [°] R (starboard)" << "\n";
-    }
-    else
-    {
-        std::cout << "DA " << HDG_TR_DEG << " [°] L (port)" << "\n";
-    }
-
     // To work out whether to add or subtract the drift angle to the track to compensate for wind,
-    // we can use the angle between the track and the wind.
-    // Note that <)W,TR is in range <0,180> DEG in relation to the TR (left and right hemisphere).
-    // For W_FROM angles less than TR the wind causes drift to the starboard side.
-    // For W_FROM angles more than TR the wind causes drift to the port side.
-    // Note that the W angle is 'to' wind (already reversed from 'from' wind).
+    // we can use the angle between the track and the wind: <)W,TR
+    // Simplest method is to find the min angle from W and TR.
+    // E.g.: W < TR, then if we subtract min angle from W and TR we offset W to 0 DEG, and TR by W.
+    // Now it is easy to work out if the drift is left or right.  
+ 
+    bool leftDrift = false;
+    
+    if( W < TR )
+    {
+        if( TR-W < ONE_EIGHTY_DEG )
+        {
+            std::cout << "DA " << HDG_TR_DEG << " [°] L (port)" << "\n";
+            leftDrift = true;
+        }
+        else
+        {
+            std::cout << "DA " << HDG_TR_DEG << " [°] R (port)" << "\n";
+            leftDrift = false;
+        }
+    }
+    else // W > TR
+    {
+        if( W-TR < ONE_EIGHTY_DEG )
+        {
+            std::cout << "DA " << HDG_TR_DEG << " [°] R (port)" << "\n";
+            leftDrift = false;
+        }
+        else
+        {
+            std::cout << "DA " << HDG_TR_DEG << " [°] L (port)" << "\n";
+            leftDrift = true;
+        }
+    }
 
-    HDG = ( W_FROM < TR ) ? ( TR - HDG_TR_DEG ) : ( TR + HDG_TR_DEG );
+    HDG = ( leftDrift ) ? ( TR + HDG_TR_DEG ) : ( TR - HDG_TR_DEG );
+
+    // Wrap around to 360.
+    HDG = ( HDG > THREE_SIXTY_DEG ) ? ( HDG - THREE_SIXTY_DEG) : HDG;
+    HDG = ( HDG < 0.0 ) ? ( HDG + THREE_SIXTY_DEG) : HDG;
 
     std::cout << "HDG " << HDG <<" [°T]" << "\n";
     std::cin >> W;

@@ -11,6 +11,9 @@ using namespace GrapheneMath;
 
 class TriangleOfVelocities
 {
+    static const double THREE_SIXTY_DEG;
+    static const double ONE_EIGHTY_DEG;
+    
     struct TriangleData
     {
         // directions in DEG T

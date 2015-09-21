@@ -19,6 +19,7 @@ void TriangleOfVelocities::getData()
 void TriangleOfVelocities::solve()
 {
     solveVecDirLength();
+    solveVecDirLength2();
 }
 
 // law of cosines
@@ -139,5 +140,40 @@ void TriangleOfVelocities::solveVecDirLength()
     HDG = ( HDG < 0.0 ) ? ( HDG + THREE_SIXTY_DEG) : HDG;
 
     std::cout << "HDG " << HDG <<" [°T]" << "\n";
+    std::cin >> W;
+}
+
+// Generic formulae (sine rule).
+// 3 side lengths, 3 angles, 4 known values
+//
+//        V                TAS                GS
+// ---------------  = -------------  = --------------
+// sin( HDG - TR )    sin( TR - W )    sin( HDG - W )
+//
+void TriangleOfVelocities::solveVecDirLength2()
+{
+    double TR  = 150.0;
+    double TAS = 100.0;
+    double W   = 0.0;
+    double V   = 30.0;
+    double HDG = 0.0; //<?
+    double GS  = 0.0; //<?
+
+    // HDG = TR + asin( (V * sin( TR - W )) / TAS )
+    // GS  = (TAS * sin( HDG - W )) / sin(TR - W)
+
+    W += ONE_EIGHTY_DEG;
+    W = ( W > THREE_SIXTY_DEG ) ? ( W - THREE_SIXTY_DEG) : W;
+
+    // Convert all directions to RAD.
+    W = Deg2Rad(W);
+    TR = Deg2Rad(TR);
+    
+    const double arg = (V * sin( TR-W )) / TAS; //< TODO: Make sure arg is clamped to the asin domain.
+    HDG = TR + asin( arg );
+    GS = (TAS * sin( HDG-W )) / sin(TR-W); //< TODO: Special case, avoid 0 devision.
+ 
+    std::cout << "HDG " << Rad2Deg(HDG) <<" [°T]" << "\n";
+    std::cout << "GS " << GS << " [kts]" << "\n";
     std::cin >> W;
 }

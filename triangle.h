@@ -60,6 +60,7 @@ public:
     
 private:
     void solveVecDirLength();
+    void solveVecDirLength2();
 
 };
 

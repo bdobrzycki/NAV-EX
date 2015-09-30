@@ -57,10 +57,12 @@ public:
 
     void getData();
     void solve();
+    double invertWind( double windFromDeg );
     
 private:
     void solveVecDirLength();
     void solveVecDirLength2();
+    void test();
 
 };
 

@@ -31,7 +31,7 @@ void Simulation::Initialise()
       m_C152.SetHDG( /*m_leg01.getTrack()*/ 251.0f ); // HDG needs to be T
 
       //m_triangle.getData();
-      //m_triangle.solve();
+      m_triangle.solve();
 }
 
 void Simulation::Update()

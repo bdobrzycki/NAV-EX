@@ -58,6 +58,7 @@ public:
     void getData();
     void solve();
     double invertWind( double windFromDeg );
+    double invertAngle( double angleDeg );
     
 private:
     void solveVecDirLength();

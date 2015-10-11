@@ -186,33 +186,32 @@ double TriangleOfVelocities::invertWind( double windFromDeg )
     return windFromDeg;
 }
 
+double TriangleOfVelocities::invertAngle( double angleDeg )
+{
+    angleDeg += ONE_EIGHTY_DEG;
+    angleDeg = ( angleDeg > THREE_SIXTY_DEG ) ? ( angleDeg - THREE_SIXTY_DEG) : angleDeg;
+    return angleDeg;
+}
+
 void TriangleOfVelocities::test()
 {
-    /*double TR  = 150.0;
-    double TAS = 100.0;
-    double W   = 0.0;
+    
+    double TR  =  150.0;
+    double TAS =  100.0;
+    double W_from = 0.0; double W_to = invertWind( W_from );
     double V   = 30.0;
-    double HDG = 0.0; //141.0;
+    double HDG = 141.0; //141.0;
     double GS  = 125.0;
     
-    W += ONE_EIGHTY_DEG;
-    W = ( W > THREE_SIXTY_DEG ) ? ( W - THREE_SIXTY_DEG) : W;
-    W = Deg2Rad( W );
-
-    TR = Deg2Rad( TR );
-
-    HDG = W + asin( ( GS * sin( TR - W ) ) / TAS ); // this should fail
-
-    std::cout << "HDG " << Rad2Deg(HDG) <<" [°T]" << "\n";
-    std::cin >> W;*/
-  
+/*
     double TR     = 290.0;
     double TAS    = 174.0;
     double W_from = 240.0;  double W_to = invertWind( W_from );
     double V      = 40.0;
     double GS     = 145.0;
     double HDG    = 280.0; //280;
-    
+    */
+   
     // Angles in triangle:
     // <)TR,W   = 130 DEG
     // <)TR,HDG = 10 DEG
@@ -220,27 +219,18 @@ void TriangleOfVelocities::test()
     //-------------------
     // sum        180 DEG
 
+   // THIS METHOD SEEMS TO WORK, SEE P. 249 Linear Algebra book. 
     std::cout << "W_to " << W_to <<" [°T]" << "\n";
+    TR = invertAngle(TR); //< always to this
     
-    double HDG_MINUS_TR = fabs(HDG - TR);
-    double TR_MINUS_W   = fabs(TR - W_from);
-    double W_MINUS_HDG  = fabs(W_to - HDG);
+    double HDG_MINUS_TR = fabs(HDG - invertAngle(TR));
+    double TR_MINUS_W   = fabs(TR - invertAngle(W_to));
+    double W_MINUS_HDG  = fabs(W_to - invertAngle(HDG));
     
     std::cout << "HDG_MINUS_TR " << HDG_MINUS_TR <<" [°T]" << "\n";
     std::cout << "TR_MINUS_W " << TR_MINUS_W <<" [°T]" << "\n";
     std::cout << "W_MINUS_HDG " << W_MINUS_HDG <<" [°T]" << "\n";
     std::cout << "SUM: " << HDG_MINUS_TR + TR_MINUS_W + W_MINUS_HDG <<" [°T]" << "\n";
 
-    //std::cout << "W " << W <<" [°T]" << "\n";
-    //std::cout << "W* " << Rad2Deg(W) <<" [°T]" << "\n";
-
-   
-
-    //double tmp = asin( ( GS * sin(W_MINUS_TR) / TAS ));
-    //std::cout << "tmp " << Rad2Deg(tmp) <<" [°]" << "\n";
-
-    //HDG = flipBack ? Wo + Rad2Deg( tmp ) : Rad2Deg( W ) + Rad2Deg( tmp );
-    //std::cout << "HDG " << HDG <<" [°T]" << "\n";
     std::cin >> W_from;
-    
 }

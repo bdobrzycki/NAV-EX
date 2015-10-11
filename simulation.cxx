@@ -15,8 +15,8 @@ Simulation::Simulation()
     ,  xAxisLine( zeroVec, xAxis, colorRed )
     ,  yAxisLine( zeroVec, yAxis, colorGreen )
     ,  zAxisLine( zeroVec, zAxis, colorBlue )
-    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 270.0f, 18.0f )
-    ,  m_wv( 0.0f, 10.0f/*3600.0f*/ ) // --<<<--
+    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 257.0f, 31.0f )
+    ,  m_wv( 110.0f, 20.0f/*3600.0f*/ ) // --<<<--
     ,  m_time( 0.0f )
     ,  m_timeDelta(0.0f)
     ,  m_dsp(' ')
@@ -28,10 +28,10 @@ void Simulation::Initialise()
       m_atmosphereModel.PrintAtmosphericConditions( m_convert.FeetToMeters( 2700.0f ) );
 
       m_C152.SetPosition( m_leg01.getStartPos() );
-      m_C152.SetHDG( /*m_leg01.getTrack()*/ 276.0f );
+      m_C152.SetHDG( /*m_leg01.getTrack()*/ 251.0f ); // HDG needs to be T
 
       //m_triangle.getData();
-      m_triangle.solve();
+      //m_triangle.solve();
 }
 
 void Simulation::Update()
@@ -53,7 +53,7 @@ void Simulation::Update()
       m_dsp.Write(0, 5, "Time:", m_time / 60.0f, "[min]" );
 
       // Const vel in aircraft reference frame.
-      const Vector3<float> TAS( 102.0f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
+      const Vector3<float> TAS( 97.0f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
       Vector3<float> v (0.f, 0.f, 0.f);  //95 kts = 95 NM/h
       v += TAS;
       // Convert the aircraft velocity from local aircraft's to global space. 
@@ -77,9 +77,9 @@ void Simulation::Update()
       const Vector3<float> NorthT( 1.0f, 0.0f, 0.0f );
       Vector3<float> vNorm = v;
       vNorm.Normalise();
-      float realTR = Rad2Deg( vNorm.GetAngle( NorthT ) );
-      // WARNING: EDGE CASES
-      realTR = ( v.GetZ() < 0.0f ) ? (realTR + 180.0) : realTR;
+      float realTR = Rad2Deg( vNorm.GetAngle( NorthT ) ); // GetAngle returns angle in range 0 - 180 DEG;
+      const Vector3<float> EastT( 0.0f, 0.0f, 1.0f );
+      realTR = ( v.Dot( EastT ) < 0.0f ) ? (360.0f - realTR) : realTR; //< make sure the angle is relative to N measured clockwise
       m_dsp.Write(0, 10, "TR:  ", realTR, "[°T]" );
       
       m_dsp.Write(30, 10, "GS:  ", v.Mag(), "[kts]" ); 

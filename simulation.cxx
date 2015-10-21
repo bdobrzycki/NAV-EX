@@ -1,3 +1,4 @@
+#include <cstdlib> //rand
 #include "simulation.h" 
 
 using namespace GrapheneMath;
@@ -15,8 +16,7 @@ Simulation::Simulation()
     ,  xAxisLine( zeroVec, xAxis, colorRed )
     ,  yAxisLine( zeroVec, yAxis, colorGreen )
     ,  zAxisLine( zeroVec, zAxis, colorBlue )
-    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 257.0f, 31.0f )
-    ,  m_wv( 110.0f, 20.0f/*3600.0f*/ ) // --<<<--
+    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 50.0f, 27.0f )
     ,  m_time( 0.0f )
     ,  m_timeDelta(0.0f)
     ,  m_dsp(' ')
@@ -26,16 +26,27 @@ Simulation::Simulation()
 void Simulation::Initialise()
 {
       m_atmosphereModel.PrintAtmosphericConditions( m_convert.FeetToMeters( 2700.0f ) );
-
-      m_C152.SetPosition( m_leg01.getStartPos() );
-      m_C152.SetHDG( /*m_leg01.getTrack()*/ 251.0f ); // HDG needs to be T
-
-      //m_triangle.getData();
-      m_triangle.solve();
 }
 
 void Simulation::Update()
 {
+    // Generte random wind.
+      const float HDG = (rand()/(float)(RAND_MAX)) * 360.0f;
+      const float W = (rand()/(float)(RAND_MAX)) * 360.0f; // from DEG
+      const float V = (rand()/(float)(RAND_MAX)) * 50.0f; // kts
+
+      m_wv.Set( W, V ); // --<<<--
+
+      m_C152.SetPosition( m_leg01.getStartPos() );
+      m_C152.SetHDG( /*m_leg01.getTrack()*/ HDG ); // HDG needs to be T
+
+      //m_triangle.HDG = HDG;
+      m_triangle.W = W;
+      m_triangle.V = V;
+      
+      
+      
+      
       // Measure framerate (fps):
       double currentTime = glfwGetTime(); //< The current value, in seconds, or zero if an error occurred.
       static double prvTime = 0.0;
@@ -53,7 +64,9 @@ void Simulation::Update()
       m_dsp.Write(0, 5, "Time:", m_time / 60.0f, "[min]" );
 
       // Const vel in aircraft reference frame.
-      const Vector3<float> TAS( 97.0f, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
+      const float tas = (rand()/(float)(RAND_MAX)) * 130.0f; // kts;
+      m_triangle.TAS = tas;
+      const Vector3<float> TAS( tas, 0.f, 0.f ); // TRUE AIRSPEED 95 kts = 95 NM/h
       Vector3<float> v (0.f, 0.f, 0.f);  //95 kts = 95 NM/h
       v += TAS;
       // Convert the aircraft velocity from local aircraft's to global space. 
@@ -62,7 +75,7 @@ void Simulation::Update()
       // Add global wind velocity to aircraft's global velocity.
       v = v + m_wv.GetWV();
 
-      m_dsp.GetStream() << "V/W:  " << m_wv.GetDirectionDeg() << " [°T] / " << m_wv.GetWV().Mag() << " [kts] ";
+      m_dsp.GetStream() << "V/W:  " << m_wv.GetDirFromDegT() << " [°T] / " << m_wv.GetWV().Mag() << " [kts] ";
       m_dsp.WriteFromStream(0, 8);
       
       const float maxDriftAngleDeg = m_wv.GetMaxDriftAngleDeg( v.Mag() );   
@@ -81,8 +94,10 @@ void Simulation::Update()
       const Vector3<float> EastT( 0.0f, 0.0f, 1.0f );
       realTR = ( v.Dot( EastT ) < 0.0f ) ? (360.0f - realTR) : realTR; //< make sure the angle is relative to N measured clockwise
       m_dsp.Write(0, 10, "TR:  ", realTR, "[°T]" );
+      m_triangle.TR = realTR;
       
       m_dsp.Write(30, 10, "GS:  ", v.Mag(), "[kts]" ); 
+      //m_triangle.GS = v.Mag();
 
       static float dstTraveledNM =  0.0f;
       dstTraveledNM += ( v.ScalarMult( m_timeDelta / 3600.0f ) ).Mag();
@@ -102,6 +117,8 @@ void Simulation::Update()
       // time of frame (already calculated).
 
       m_time += m_timeDelta;
+      
+      m_triangleSolver.solve( m_triangle );
 }
 
 void Simulation::Draw()

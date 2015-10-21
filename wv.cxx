@@ -2,14 +2,19 @@
 
 //using namespace GrapheneMath;
 
-WV::WV( float dirDegM, float speedKts ) // dirDegM - from where the wind is blowing, deg magnetic
+WV::WV()
    : c_colorBlue( 0.0f, 0.0f, 1.0f )
-   , c_dirDegM( dirDegM )
    {
+       Set(0.0f, 0.0f );
+   }
+
+   void WV::Set( float dirFromDegT, float speedKts )
+   {
+       m_dirFromDegT = dirFromDegT;
        const Vector3<float> dirNorth( 1.0f, 0.0f, 0.0f ); //< North is x axis.
        const Vector3<float> downDir( 0.0f, -1.0f, 0.0f ); //< Clockwise rotation.
        Quaternion<float> rot;
-       rot.FromAxisAngle( downDir, Deg2Rad( c_dirDegM ) );
+       rot.FromAxisAngle( downDir, Deg2Rad( m_dirFromDegT ) );
        m_wind = rot.RotateFast( dirNorth );
        m_wind = m_wind.ScalarMult( speedKts );
        
@@ -31,6 +36,7 @@ WV::WV( float dirDegM, float speedKts ) // dirDegM - from where the wind is blow
        m_vArrows[1].Set( pos + dir.ScalarMult(0.6f), dir, downDir.ScalarMult( -1.0f ), c_colorBlue, drawScale * 0.05f );
        m_vArrows[2].Set( pos + dir.ScalarMult(0.8f), dir, downDir.ScalarMult( -1.0f ), c_colorBlue, drawScale * 0.05f );  
    }
+   
    
    const float WV::GetMaxDriftAngleDeg( float speedKt )
    {

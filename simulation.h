@@ -48,7 +48,8 @@ private:
     float         m_time;
     float         m_timeDelta;
 
-    TriangleOfVelocities m_triangle;
+    TriangleOfVelocitiesSolver   m_triangleSolver;
+    TriangleOfVelocities         m_triangle;
 
     AlphanumDisplay m_dsp;
     

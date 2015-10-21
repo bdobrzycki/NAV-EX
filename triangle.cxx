@@ -1,26 +1,131 @@
 #include "triangle.h" 
 
-const double TriangleOfVelocities::THREE_SIXTY_DEG = 360.0;
-const double TriangleOfVelocities::ONE_EIGHTY_DEG  = 180.0;
+const double TriangleOfVelocitiesSolver::THREE_SIXTY_DEG = 360.0;
+const double TriangleOfVelocitiesSolver::ONE_EIGHTY_DEG  = 180.0;
 
-TriangleOfVelocities::TriangleOfVelocities()
+TriangleOfVelocitiesSolver::TriangleOfVelocitiesSolver()
     : m_mask( 0 )
     {}
 
-void TriangleOfVelocities::getData()
+void TriangleOfVelocitiesSolver::solve( TriangleOfVelocities& tov )
 {
-    std::cout << "HDG [DEG T]" << "\n";
-    std::cin >> m_data.HDG;
-    m_mask |= eHDG;
+    // make mask from triangle
+    // select solving algo based on that mask
+    
+    // Test 01
+    //tov.TR  = 150.0;
+    //tov.TAS = 100.0;
+    //tov.W   = 0.0;
+    //tov.V   = 30.0;
+// >>>> GS  = 125;
+// >>>> HDG = 141;
 
-    // etc.
-}
+// Test 02
+// TR  = 290.0;
+// TAS = 174.0;
+// W   = 240.0;
+// V   = 40.0;
+//
+// >>>> GS  = 145;
+// >>>> HDG = 280;
+    
+    const double W_to = invertAngle( tov.W );
+    const double TR = invertAngle( tov.TR ); 
+    
+    double TR_W = fabs( TR - invertAngle( W_to ) );
+    if( TR_W > ONE_EIGHTY_DEG )
+    {
+        TR_W = THREE_SIXTY_DEG - TR_W;
+    }
+    
+    // FINISHED HERE
+    // THE METHOD BELOW WORKS OK BUT IS THERE A SIMPLER WAY?
+    
+    /////////////////////////////////////////////////////
+    // To work out whether to add or subtract the drift angle to the track to compensate for wind,
+    // we can use the angle between the track and the wind: <)W,TR
+    // Simplest method is to find the min angle from W and TR.
+    // E.g.: W < TR, then if we subtract min angle from W and TR we offset W to 0 DEG, and TR by W.
+    // Now it is easy to work out if the drift is left or right.  
+ 
+    bool leftDrift = false;
+    
+    if( tov.W < tov.TR )
+    {
+        if( tov.TR-tov.W < ONE_EIGHTY_DEG )
+        {
+            leftDrift = true;
+        }
+        else
+        {
+            leftDrift = false;
+        }
+    }
+    else // W > TR
+    {
+        if( tov.W-tov.TR < ONE_EIGHTY_DEG )
+        {
+            leftDrift = false;
+        }
+        else
+        {
+            leftDrift = true;
+        }
+    }
+    /////////////////////////////////////////////////////
+    
+    double arg = sin( Deg2Rad(TR_W)) * (tov.V / tov.TAS);
+    arg = (arg > 1.0) ? 1.0 : arg;
+    arg = (arg < -1.0) ? -1.0 : arg; 
+    
+    if(leftDrift)
+    {
+        tov.HDG = Deg2Rad( tov.TR ) - asin( arg ); 
+    }else
+    {
+        tov.HDG = Deg2Rad( tov.TR ) + asin( arg );
+    }
+    
+    
+    tov.HDG = Rad2Deg( tov.HDG );
+    
+    // 1st
+    double W_HDG  = fabs( W_to - invertAngle( tov.HDG ) );
+    if( W_HDG > ONE_EIGHTY_DEG )
+    {
+        W_HDG = THREE_SIXTY_DEG - W_HDG;
+    }
 
-void TriangleOfVelocities::solve()
-{
-    //solveVecDirLength();
-    //solveVecDirLength2();
-    test();
+    double HDG_TR = fabs( tov.HDG - invertAngle( TR ) );
+    if( HDG_TR > ONE_EIGHTY_DEG )
+    {
+        HDG_TR = THREE_SIXTY_DEG - HDG_TR;
+    }
+    
+    std::cout << "---------------------------------\n";
+    std::cout << "W_to "     << W_to   << " [°T]" << "\n";
+    std::cout << "TR* "      << TR     << " [°T]" << "\n";
+    std::cout << "arg "      << arg    << " [-1;+1]" << "\n";
+    std::cout << "<)HDG_TR " << HDG_TR << " [°T]" << "\n";
+    std::cout << "<)TR_W "   << TR_W   << " [°T]" << "\n";
+    std::cout << "<)W_HDG "  << W_HDG  << " [°T]" << "\n";
+    const double sumAngleDEG = HDG_TR + TR_W + W_HDG;
+    std::cout << "<)SUM: " << sumAngleDEG <<" [°T]" << "\n";
+
+    tov.GS = tov.V * ( sin( Deg2Rad(W_HDG)) / (sin( Deg2Rad(HDG_TR) )));
+    
+    std::cout << "HDG "  << tov.HDG << " [°T]"  << "\n";
+    std::cout << "TAS "  << tov.TAS << " [kts]" << "\n";
+    std::cout << "W "    << tov.W   << " [°T]"  << "\n";
+    std::cout << "V "    << tov.V   << " [kts]" << "\n";
+    std::cout << "TR "   << tov.TR  << " [°T]"  << "\n";
+    std::cout << "GS "   << tov.GS  << " [kts]" << "\n";
+    std::cout << "---------------------------------\n";
+
+    // full triangle at this point
+    int d;
+    std::cin >> d; 
+    assert( isSane( tov ) );
 }
 
 // law of cosines
@@ -52,7 +157,7 @@ void TriangleOfVelocities::solve()
 // >>>> HDG = 280;
 
     
-void TriangleOfVelocities::solveVecDirLength()
+void TriangleOfVelocitiesSolver::solveVecDirLength()
 {
     std::cout << "Triangle solve()" << "\n";
     std::cout << "----------------" << "\n";
@@ -151,7 +256,7 @@ void TriangleOfVelocities::solveVecDirLength()
 // ---------------  = -------------  = --------------
 // sin( HDG - TR )    sin( TR - W )    sin( HDG - W )
 //
-void TriangleOfVelocities::solveVecDirLength2()
+void TriangleOfVelocitiesSolver::solveVecDirLength2()
 {
     double TR  = 150.0;
     double TAS = 100.0;
@@ -179,58 +284,77 @@ void TriangleOfVelocities::solveVecDirLength2()
     std::cin >> W;
 }
 
-double TriangleOfVelocities::invertWind( double windFromDeg )
+double TriangleOfVelocitiesSolver::invertWind( double windFromDeg )
 {
     windFromDeg += ONE_EIGHTY_DEG;
     windFromDeg = ( windFromDeg > THREE_SIXTY_DEG ) ? ( windFromDeg - THREE_SIXTY_DEG) : windFromDeg;
     return windFromDeg;
 }
 
-double TriangleOfVelocities::invertAngle( double angleDeg )
+double TriangleOfVelocitiesSolver::invertAngle( double angleDeg ) const
 {
     angleDeg += ONE_EIGHTY_DEG;
     angleDeg = ( angleDeg > THREE_SIXTY_DEG ) ? ( angleDeg - THREE_SIXTY_DEG) : angleDeg;
     return angleDeg;
 }
 
-void TriangleOfVelocities::test()
+// Angles in triangle:
+// <)TR,W   = 130 DEG
+// <)TR,HDG = 10 DEG
+// <)HDG,W  = 40 DEG
+//-------------------
+// sum        180 DEG
+
+//double TR  = 150.0;
+//double TAS = 100.0;
+//double W   = 0.0;
+//double V   = 30.0;
+//double HDG = 141.0;
+//double GS  = 125.0;
+
+//double TR     = 290.0;
+//double TAS    = 174.0;
+//double W_from = 240.0;
+//double V      = 40.0;
+//double GS     = 145.0;
+//double HDG    = 280.0;
+
+// METHOD SEE P. 249 Linear Algebra book. 
+bool TriangleOfVelocitiesSolver::isSane( const TriangleOfVelocities& tov )
 {
-    
-    double TR  =  150.0;
-    double TAS =  100.0;
-    double W_from = 0.0; double W_to = invertWind( W_from );
-    double V   = 30.0;
-    double HDG = 141.0; //141.0;
-    double GS  = 125.0;
-    
-/*
-    double TR     = 290.0;
-    double TAS    = 174.0;
-    double W_from = 240.0;  double W_to = invertWind( W_from );
-    double V      = 40.0;
-    double GS     = 145.0;
-    double HDG    = 280.0; //280;
-    */
-   
-    // Angles in triangle:
-    // <)TR,W   = 130 DEG
-    // <)TR,HDG = 10 DEG
-    // <)HDG,W  = 40 DEG
-    //-------------------
-    // sum        180 DEG
+    const double W_to = invertAngle( tov.W );
+    const double TR = invertAngle( tov.TR ); 
 
-   // THIS METHOD SEEMS TO WORK, SEE P. 249 Linear Algebra book. 
-    std::cout << "W_to " << W_to <<" [°T]" << "\n";
-    TR = invertAngle(TR); //< always to this
-    
-    double HDG_MINUS_TR = fabs(HDG - invertAngle(TR));
-    double TR_MINUS_W   = fabs(TR - invertAngle(W_to));
-    double W_MINUS_HDG  = fabs(W_to - invertAngle(HDG));
-    
-    std::cout << "HDG_MINUS_TR " << HDG_MINUS_TR <<" [°T]" << "\n";
-    std::cout << "TR_MINUS_W " << TR_MINUS_W <<" [°T]" << "\n";
-    std::cout << "W_MINUS_HDG " << W_MINUS_HDG <<" [°T]" << "\n";
-    std::cout << "SUM: " << HDG_MINUS_TR + TR_MINUS_W + W_MINUS_HDG <<" [°T]" << "\n";
+    double HDG_MINUS_TR = fabs( tov.HDG - invertAngle( TR ) );
+    double TR_MINUS_W   = fabs( TR - invertAngle( W_to ) );
+    double W_MINUS_HDG  = fabs( W_to - invertAngle( tov.HDG ) );
+ 
+    if( HDG_MINUS_TR > ONE_EIGHTY_DEG )
+    {
+        HDG_MINUS_TR = THREE_SIXTY_DEG - HDG_MINUS_TR;
+    }
 
-    std::cin >> W_from;
+    if( TR_MINUS_W > ONE_EIGHTY_DEG )
+    {
+        TR_MINUS_W = THREE_SIXTY_DEG - TR_MINUS_W;
+    }
+
+    if( W_MINUS_HDG > ONE_EIGHTY_DEG )
+    {
+        W_MINUS_HDG = THREE_SIXTY_DEG - W_MINUS_HDG;
+    }
+
+    //std::cout << "\n";
+    //std::cout << "<)HDG_TR " << HDG_MINUS_TR << " [°T]" << "\n";
+    //std::cout << "<)TR_W "   << TR_MINUS_W   << " [°T]" << "\n";
+    //std::cout << "<)W_HDG "  << W_MINUS_HDG  << " [°T]" << "\n";
+
+    const double sumAngleDEG = HDG_MINUS_TR + TR_MINUS_W + W_MINUS_HDG;
+
+    //std::cout << "SUM: " << sumAngleDEG <<" [°T]" << "\n";
+
+    const bool isSane = (fabs ( ONE_EIGHTY_DEG - sumAngleDEG ) < 0.01 ) ? true : false;
+
+    return isSane;
 }
+

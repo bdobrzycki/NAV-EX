@@ -21,14 +21,14 @@ private:
   static const unsigned int c_numOfVArrows = 3;
   std::vector<Varrow2D>     m_vArrows;
   Vector3<float>            m_wind;
-  float                     c_dirDegM;
+  float                     m_dirFromDegT;
    
 public:
-   WV( float dirDegM, float speedKts ); // dirDegM - from where the wind is blowing, deg magnetic
-   
+   WV(); 
+   void                 Set( float dirFromDegT, float speedKts ); //< from where the wind is blowing, deg True
    const Vector3<float> GetWV( void ) const { return m_wind; }  // kts = NM / H
-   const float GetDirectionDeg( void ) const { return c_dirDegM; } // kts = NM / H
-   const float GetMaxDriftAngleDeg( float speedKt );
+   const float          GetDirFromDegT( void ) const { return m_dirFromDegT; } // kts = NM / H
+   const float          GetMaxDriftAngleDeg( float speedKt );
    void Draw() const; 
 };
 

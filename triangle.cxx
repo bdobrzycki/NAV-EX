@@ -123,8 +123,6 @@ void TriangleOfVelocitiesSolver::solve( TriangleOfVelocities& tov )
     std::cout << "---------------------------------\n";
 
     // full triangle at this point
-    int d;
-    std::cin >> d; 
     assert( isSane( tov ) );
 }
 

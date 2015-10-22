@@ -80,7 +80,7 @@ void TriangleOfVelocitiesSolver::solve( TriangleOfVelocities& tov )
     
     if(leftDrift)
     {
-        tov.HDG = Deg2Rad( tov.TR ) - asin( arg ); 
+        tov.HDG = fabs(Deg2Rad( tov.TR ) - asin( arg )); 
     }else
     {
         tov.HDG = Deg2Rad( tov.TR ) + asin( arg );
@@ -102,25 +102,25 @@ void TriangleOfVelocitiesSolver::solve( TriangleOfVelocities& tov )
         HDG_TR = THREE_SIXTY_DEG - HDG_TR;
     }
     
-    std::cout << "---------------------------------\n";
-    std::cout << "W_to "     << W_to   << " [°T]" << "\n";
-    std::cout << "TR* "      << TR     << " [°T]" << "\n";
-    std::cout << "arg "      << arg    << " [-1;+1]" << "\n";
-    std::cout << "<)HDG_TR " << HDG_TR << " [°T]" << "\n";
-    std::cout << "<)TR_W "   << TR_W   << " [°T]" << "\n";
-    std::cout << "<)W_HDG "  << W_HDG  << " [°T]" << "\n";
-    const double sumAngleDEG = HDG_TR + TR_W + W_HDG;
-    std::cout << "<)SUM: " << sumAngleDEG <<" [°T]" << "\n";
+    //std::cout << "---------------------------------\n";
+    //std::cout << "W_to "     << W_to   << " [°T]" << "\n";
+    //std::cout << "TR* "      << TR     << " [°T]" << "\n";
+    //std::cout << "arg "      << arg    << " [-1;+1]" << "\n";
+    //std::cout << "<)HDG_TR " << HDG_TR << " [°T]" << "\n";
+    //std::cout << "<)TR_W "   << TR_W   << " [°T]" << "\n";
+    //std::cout << "<)W_HDG "  << W_HDG  << " [°T]" << "\n";
+    //const double sumAngleDEG = HDG_TR + TR_W + W_HDG;
+    //std::cout << "<)SUM: " << sumAngleDEG <<" [°T]" << "\n";
 
     tov.GS = tov.V * ( sin( Deg2Rad(W_HDG)) / (sin( Deg2Rad(HDG_TR) )));
     
-    std::cout << "HDG "  << tov.HDG << " [°T]"  << "\n";
-    std::cout << "TAS "  << tov.TAS << " [kts]" << "\n";
-    std::cout << "W "    << tov.W   << " [°T]"  << "\n";
-    std::cout << "V "    << tov.V   << " [kts]" << "\n";
-    std::cout << "TR "   << tov.TR  << " [°T]"  << "\n";
-    std::cout << "GS "   << tov.GS  << " [kts]" << "\n";
-    std::cout << "---------------------------------\n";
+    //std::cout << "HDG "  << tov.HDG << " [°T]"  << "\n";
+    //std::cout << "TAS "  << tov.TAS << " [kts]" << "\n";
+    //std::cout << "W "    << tov.W   << " [°T]"  << "\n";
+    //std::cout << "V "    << tov.V   << " [kts]" << "\n";
+    //std::cout << "TR "   << tov.TR  << " [°T]"  << "\n";
+    //std::cout << "GS "   << tov.GS  << " [kts]" << "\n";
+    //std::cout << "---------------------------------\n";
 
     // full triangle at this point
     assert( isSane( tov ) );
@@ -352,6 +352,12 @@ bool TriangleOfVelocitiesSolver::isSane( const TriangleOfVelocities& tov )
     //std::cout << "SUM: " << sumAngleDEG <<" [°T]" << "\n";
 
     const bool isSane = (fabs ( ONE_EIGHTY_DEG - sumAngleDEG ) < 0.01 ) ? true : false;
+    
+    //TODO
+    // In some cases the triangle can't be solved because not the angles, but the lengths of the triangle sides.
+    // e.g. TAS is 95 kts tracking North, however there is a wind 100 kts from N;
+    // It is impossible for the aircraft to fly North in this case.
+    // Implement a test to check if the solution exists at all.
 
     return isSane;
 }

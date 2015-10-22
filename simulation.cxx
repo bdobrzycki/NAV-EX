@@ -16,7 +16,7 @@ Simulation::Simulation()
     ,  xAxisLine( zeroVec, xAxis, colorRed )
     ,  yAxisLine( zeroVec, yAxis, colorGreen )
     ,  zAxisLine( zeroVec, zAxis, colorBlue )
-    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), 45.0f, 27.0f )
+    ,  m_leg01( Vector3<float>( 0.0f, 0.0f, 0.0f ), (rand()/(float)(RAND_MAX)) * 360.0, 27.0f )
     ,  m_time( 0.0f )
     ,  m_timeDelta(0.0f)
     ,  m_dsp(' ')
@@ -33,7 +33,7 @@ void Simulation::Initialise()
       m_triangle.W = (rand()/(float)(RAND_MAX)) * 360.0f; // from DEG
       m_triangle.V =(rand()/(float)(RAND_MAX)) * 50.0f;  // kts
 
-      m_triangle.TAS = (rand()/(float)(RAND_MAX)) * 120.0f;  // kts
+      m_triangle.TAS = 65.0 + (rand()/(float)(RAND_MAX)) * 60.0;  // kts
 
       m_triangle.TR = m_leg01.getTrack();
 
@@ -41,14 +41,15 @@ void Simulation::Initialise()
 
       // solve triangle
       m_triangleSolver.solve( m_triangle );
+      
+      m_C152.SetPosition( m_leg01.getStartPos() );
+      
+      // HDG needs to be T
+      m_C152.SetHDG(  m_triangle.HDG ); //< set from solved triangle 
 }
 
 void Simulation::Update()
 {
-      m_C152.SetPosition( m_leg01.getStartPos() );
-      // HDG needs to be T
-      m_C152.SetHDG(  m_triangle.HDG ); // set from solved triangle 
-
       // Measure framerate (fps):
       double currentTime = glfwGetTime(); //< The current value, in seconds, or zero if an error occurred.
       static double prvTime = 0.0;
@@ -79,7 +80,7 @@ void Simulation::Update()
       m_dsp.WriteFromStream(0, 8);
       
       const float maxDriftAngleDeg = m_wv.GetMaxDriftAngleDeg( v.Mag() );   
-      m_dsp.Write(50, 8, "MAX DRIFT: ", maxDriftAngleDeg, "[°]" );
+      m_dsp.Write(46, 8, "MAX DRIFT: ", maxDriftAngleDeg, "[°]" );
 
       const Quaternion<float> orient = m_C152.GetOrientation();
       m_dsp.Write(0, 9, "HDG: ", Rad2Deg( orient.GetAngle() ), "[°T]" );
@@ -104,11 +105,11 @@ void Simulation::Update()
       //triangle solution
       m_dsp.GetStream() << "-- T R I A N G L E --";
       m_dsp.WriteFromStream(0, 14);
-      m_dsp.GetStream() << "V/W:  " << m_triangle.W << " [°T] / " << m_triangle.V << " [kts] ";
+      m_dsp.GetStream() << "V/W:     " << m_triangle.W << " [°T] / " << m_triangle.V << " [kts] ";
       m_dsp.WriteFromStream(0, 15);
-      m_dsp.GetStream() << "HDG/TAS:  " << m_triangle.HDG << " [°T] / " << m_triangle.TAS << " [kts] ";
+      m_dsp.GetStream() << "HDG/TAS: " << m_triangle.HDG << " [°T] / " << m_triangle.TAS << " [kts] ";
       m_dsp.WriteFromStream(0, 16);
-      m_dsp.GetStream() << "TR/GS:  " << m_triangle.TR << " [°T] / " << m_triangle.GS << " [kts] ";
+      m_dsp.GetStream() << "TR/GS:   " << m_triangle.TR << " [°T] / " << m_triangle.GS << " [kts] ";
       m_dsp.WriteFromStream(0, 17);
  
       // vel is in [kts] = [NM/h], the timestep in [s] hence it needs to be converted

@@ -31,9 +31,11 @@ void Simulation::Initialise()
 
       // Generte random wind.
       m_triangle.W = (rand()/(float)(RAND_MAX)) * 360.0f; // from DEG
-      m_triangle.V =(rand()/(float)(RAND_MAX)) * 50.0f;  // kts
+      //m_triangle.V =(rand()/(float)(RAND_MAX)) * 50.0f;  // kts
+      m_triangle.V = 70.0f; //HACK
 
-      m_triangle.TAS = 65.0 + (rand()/(float)(RAND_MAX)) * 60.0;  // kts
+      //m_triangle.TAS = 65.0 + (rand()/(float)(RAND_MAX)) * 60.0;  // kts
+      m_triangle.TAS = 10.0f; //HACK
 
       m_triangle.TR = m_leg01.getTrack();
 

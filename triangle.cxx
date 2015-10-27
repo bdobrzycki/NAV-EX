@@ -38,6 +38,35 @@ void TriangleOfVelocitiesSolver::solve( TriangleOfVelocities& tov )
         TR_W = THREE_SIXTY_DEG - TR_W;
     }
     
+    // impossible triangle? (Bronsztejn)
+    if( tov.TAS >= tov.V )
+    {
+        // <) HDG,TR < 90 DEG, single solution 
+        std::cout << "basic: <) HDG,TR < 90 DEG" << "\n";
+    }
+    else // TAS < V
+    {
+        const double VsinTR_W = tov.V * sin ( Deg2Rad( TR_W ) ); 
+ 
+        if ( VsinTR_W < tov.TAS )
+        {
+            // two solutions
+            // <)HDG,GS 2 = 180 DEG - <)HDG,GS 1 
+            std::cout << "two solutions" << "\n";
+        }
+        else if( VsinTR_W == tov.TAS )
+        {
+            // <)HDG,GS = 90 DEG
+            std::cout << "<)HDG,GS = 90 DEG" << "\n";
+        }
+        else // VsinTR_W > tov.TAS
+        {
+            // impossible triangle!
+            std::cout << "impossible triangle!" << "\n";
+        }
+    }
+
+    
     // FINISHED HERE
     // THE METHOD BELOW WORKS OK BUT IS THERE A SIMPLER WAY?
     
@@ -342,16 +371,51 @@ bool TriangleOfVelocitiesSolver::isSane( const TriangleOfVelocities& tov )
         W_MINUS_HDG = THREE_SIXTY_DEG - W_MINUS_HDG;
     }
 
-    //std::cout << "\n";
-    //std::cout << "<)HDG_TR " << HDG_MINUS_TR << " [°T]" << "\n";
-    //std::cout << "<)TR_W "   << TR_MINUS_W   << " [°T]" << "\n";
-    //std::cout << "<)W_HDG "  << W_MINUS_HDG  << " [°T]" << "\n";
+    std::cout << "\n";
+    std::cout << "<)HDG_TR " << HDG_MINUS_TR << " [°T]" << "\n";
+    std::cout << "<)TR_W "   << TR_MINUS_W   << " [°T]" << "\n";
+    std::cout << "<)W_HDG "  << W_MINUS_HDG  << " [°T]" << "\n";
 
     const double sumAngleDEG = HDG_MINUS_TR + TR_MINUS_W + W_MINUS_HDG;
 
-    //std::cout << "SUM: " << sumAngleDEG <<" [°T]" << "\n";
+    std::cout << "SUM: " << sumAngleDEG <<" [°T]" << "\n";
 
     const bool isSane = (fabs ( ONE_EIGHTY_DEG - sumAngleDEG ) < 0.01 ) ? true : false;
+    
+    // HDG/TAS and TR/GS pair.
+    Vector3<float> a( 1.0f, 0.0f, 0.0f );
+    const Vector3<float> rotAxis( 0.0f, -1.0f, 0.0f );
+    Quaternion<float> rot;
+    rot.FromAxisAngle( rotAxis, Deg2Rad( HDG_MINUS_TR ) );
+    Vector3<float> b = rot.RotateFast( a );
+    a = a.ScalarMult( tov.TAS );
+    b = b.ScalarMult( tov.GS );
+    // compare against W/V
+    Vector3<float> c = b - a;
+    std::cout << "V test: " << tov.V << ", c.Mag(): " << c.Mag() << "\n";
+    
+    // HDG/TAS and W/V pair.
+    a = Vector3<float>( 1.0f, 0.0f, 0.0f );
+    rot.FromAxisAngle( rotAxis, Deg2Rad( W_MINUS_HDG ) );
+    b = rot.RotateFast( a );
+    a = a.ScalarMult( tov.TAS );
+    b = b.ScalarMult( tov.V );
+    // compare against TR/GS
+    c = b - a;
+    std::cout << "GS test: " << tov.GS << ", c.Mag(): " << c.Mag() << "\n";
+    
+    // TR/GS and W/V pair.
+    a = Vector3<float>( 1.0f, 0.0f, 0.0f );
+    rot.FromAxisAngle( rotAxis, Deg2Rad( TR_MINUS_W ) );
+    b = rot.RotateFast( a );
+    a = a.ScalarMult( tov.GS );
+    b = b.ScalarMult( tov.V );
+    // compare against HDG/TAS
+    c = b - a;
+    std::cout << "TAS test: " << tov.TAS << ", c.Mag(): " << c.Mag() << "\n";
+    
+    int dupa;
+    std::cin >> dupa;
     
     //TODO
     // In some cases the triangle can't be solved because not the angles, but the lengths of the triangle sides.

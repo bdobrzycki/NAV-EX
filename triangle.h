@@ -6,6 +6,7 @@
 
 // Math
 #include "mathUtils.h"
+#include "quat.h"
 
 using namespace GrapheneMath;
 

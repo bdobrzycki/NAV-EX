@@ -27,7 +27,14 @@ private:
     WV              m_wv;
     float           m_time;
     float           m_timeDelta;
+    float           m_timer;
     AlphanumDisplay m_dsp;
+    float           m_W; //< wind direction from
+    float           m_V; //< wind speed
+    float           m_TAS;
+
+    void getInputParams();
+    void evaluateAnswer();
 
 public:
     DeadReckoning();
@@ -38,5 +45,7 @@ public:
     void Update();
     void Draw();
 };
+
+
 
 #endif //__DEAD_RECKONING_H__

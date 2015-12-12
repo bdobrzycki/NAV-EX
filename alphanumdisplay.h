@@ -38,7 +38,13 @@ public:
       return ostr.str();
   }
   
-  inline void SetRefreshRateHz( float refreshRate ) { m_refreshRate = refreshRate; }
+  inline void SetRefreshRateHz( float refreshRate )
+  {
+      m_refreshRate = refreshRate;
+      Clear();
+      m_lastRefreshTime = 0.0f;
+  }
+  
   void Clear();
 
   // Write to display.

@@ -64,7 +64,7 @@ AlphanumDisplay::AlphanumDisplay( char displayBckg )
       if ( (time - m_lastRefreshTime) > ( 1.0f / m_refreshRate ) )
       {
         std::cout << m_displayGrid << std::flush;
-        m_lastRefreshTime = time; 
+        m_lastRefreshTime = time;
       }
   }
 

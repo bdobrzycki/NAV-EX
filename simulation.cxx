@@ -23,6 +23,11 @@ Simulation::Simulation()
 {
 }
 
+Simulation::~Simulation()
+{
+   std::cout << "Kill sim module..." << "\n";
+}
+
 void Simulation::Initialise()
 {
       m_atmosphereModel.PrintAtmosphericConditions( m_convert.FeetToMeters( 2700.0f ) );

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <vector>
 
-#include "simulation.h"
+#include "application.h"
 
 static void error_callback(int error, const char* description)
 {
@@ -41,10 +41,10 @@ int main( void )
     glfwMakeContextCurrent(window);
 
     glfwSetKeyCallback( window, key_callback );
-    
-    // Simulation.
-    Simulation sim;
-    sim.Initialise();
+
+    // Application.
+    Application app;
+    app.Initialise();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -55,31 +55,33 @@ int main( void )
         ratio = width / (float) height;
 
         glViewport(0, 0, width, height);
-         
+
         glClear( GL_COLOR_BUFFER_BIT );
 
         glMatrixMode( GL_PROJECTION );
         glLoadIdentity();
-        
+
         gluPerspective( 3.1415f, ratio, 1.0f, 3000.0f );
 
         glMatrixMode( GL_MODELVIEW );
         glLoadIdentity();
-        
+
         // Set a background color.  
         glClearColor(0.25f, 0.25f, 0.25f, 0.0f);  
         
         gluLookAt( -1.0f, 1000.0f, 0.0f, /* eye */
                    0.0f, 0.0f, 0.0f,     /* center of vision */
                    0.0f, 1.0f, 0.0f );   /* up vector */
-        
-        sim.Update();
-        sim.Draw();
+
+        app.Update();
+        app.Draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    app.~Application();
+    
     glfwDestroyWindow( window );
 
     glfwTerminate();

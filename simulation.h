@@ -4,6 +4,9 @@
 #include <assert.h>
 #include <GLFW/glfw3.h>
 
+// App
+#include "applicationModule.h"
+
 // Math
 #include "mathUtils.h"
 #include "quat.h"
@@ -22,7 +25,7 @@
 
 using namespace GrapheneMath;
 
-class Simulation
+class Simulation : public ApplicationModule
 {
 private:
     const Vector3<GLfloat> zeroVec;
@@ -55,6 +58,9 @@ private:
     
 public:
     Simulation();
+    virtual ~Simulation();
+
+    //Application Module overrides
     void Initialise();
     void Update();
     void Draw();

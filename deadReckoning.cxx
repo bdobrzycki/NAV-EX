@@ -1,4 +1,5 @@
 #include <cstdlib> //rand
+#include <string>
 #include "deadReckoning.h"
 
 using namespace GrapheneMath;
@@ -8,6 +9,7 @@ DeadReckoning::DeadReckoning()
     ,  m_time( 0.0f )
     ,  m_timeDelta( 1.0f / 60.0f ) // sec
     ,  m_timer( 0.0f )
+    ,  m_timerSet( 0.0f )
     ,  m_dsp(' ')
     ,  m_V( 0.0f )
 {
@@ -34,13 +36,41 @@ void DeadReckoning::getInputParams()
     std::cout << "TAS [kt]: ";
     std::cin >> input;
     m_TAS = std::max( input, 0.0f );
+    
+    std::cout << "MAX TIME [sec]: ";
+    std::cin >> input;
+    m_timerSet = std::max( input, 0.0f );
 }
 
 void DeadReckoning::evaluateAnswer()
 {
-      m_dsp.GetStream() << "huj";
-      m_dsp.WriteFromStream(0, 12);
-      m_dsp.Refresh( m_time + 1.0f );
+    // Display results.
+    const float MAX_DRIFT_DEG = m_wv.GetMaxDriftAngleDeg( m_TAS );
+    m_dsp.GetStream() << "MAX DRIFT (atan): " << static_cast<int>(MAX_DRIFT_DEG) << " [°]";
+    m_dsp.WriteFromStream(0, 12);
+
+    m_dsp.GetStream() << "          (1/60): " << static_cast<int>( ( m_V / m_TAS ) * 60.0f) << " [°]";
+    m_dsp.WriteFromStream(0, 13);
+
+    // DA (drift angle)
+    Vector3<float> windTo = m_wv.GetWV();
+    windTo.Normalise();
+    const Vector3<float> lateralAxis( -1.0f, 0.0f, 0.0f );
+    float dot = windTo.Dot( lateralAxis );
+    std::string s = ( dot < 0.0f ) ? "PORT" : "STARBOARD";
+    s = ( fabs( dot ) < 0.001f ) ? "NO DRIFT" : s; // special case
+    m_dsp.GetStream() << "DA              : " << static_cast<int>( MAX_DRIFT_DEG * fabs( dot ) ) << " [°]  " << s;
+    m_dsp.WriteFromStream(0, 14);
+
+    // head / tail wind
+    const Vector3<float> longitudinalAxis( 0.0f, 0.0f, 1.0f );
+    dot = windTo.Dot( longitudinalAxis );
+    s = ( dot < 0.0f ) ? "HEAD" : "TAIL";
+    s = ( fabs( dot ) < 0.001f ) ? "GS is TAS" : s; // special case
+    m_dsp.GetStream() << "WIND            : " << static_cast<int>( m_V * fabs( dot ) ) << " [kt] " << s;
+    m_dsp.WriteFromStream(0, 15);
+
+    m_dsp.Refresh( m_time + 1.0f );
 }
 
 void DeadReckoning::Initialise()
@@ -55,8 +85,8 @@ void DeadReckoning::Initialise()
     m_C152.SetPosition( Vector3<GLfloat>(0.0f, 0.0f, 0.0f) );
     m_C152.SetHDG( 90.0f ); // DEG
 
-    m_timer = 5.0f; // sec
-    
+    m_timer = m_timerSet; // sec
+
     m_dsp.SetRefreshRateHz( 1.0f ); //< every 1 sec
 }
 
@@ -81,10 +111,7 @@ void DeadReckoning::Update()
       m_dsp.GetStream() << "W/V:  " << m_wv.GetDirFromDegT() << " [°] / " << m_wv.GetWV().Mag() << " [kt] ";
       m_dsp.WriteFromStream(0, 7);
 
-      m_dsp.Write(0, 8, "TAS:  ", m_TAS, "[kt]" );
-
-      m_dsp.GetStream() << "                        ";
-      m_dsp.WriteFromStream(0, 12);
+      m_dsp.Write(0, 8, "TAS: ", m_TAS, "[kt]" );
 
       m_dsp.Refresh( m_time );
 

@@ -3,7 +3,7 @@
 //using namespace GrapheneMath;
 
 WV::WV( const Vector3<float>& drawPosition )
-   : c_colorBlue( 0.0f, 0.0f, 1.0f )
+   : c_color( 0.498f, 1.0f, 0.0f )
    , c_drawPosition( drawPosition )
    {
        Set( 0.0f, 0.0f );
@@ -31,10 +31,10 @@ WV::WV( const Vector3<float>& drawPosition )
        dir.Normalise();
        const float drawScale = 15.0f;
        dir = dir.ScalarMult( drawScale ) ; //<< wind not in scale
-       m_line.Set( c_drawPosition, c_drawPosition + dir, c_colorBlue );
-       m_vArrows[0].Set( c_drawPosition + dir.ScalarMult(0.4f), dir, downDir.ScalarMult( -1.0f ), c_colorBlue, drawScale * 0.01f );
-       m_vArrows[1].Set( c_drawPosition + dir.ScalarMult(0.6f), dir, downDir.ScalarMult( -1.0f ), c_colorBlue, drawScale * 0.01f );
-       m_vArrows[2].Set( c_drawPosition + dir.ScalarMult(0.8f), dir, downDir.ScalarMult( -1.0f ), c_colorBlue, drawScale * 0.01f );
+       m_line.Set( c_drawPosition, c_drawPosition + dir, c_color );
+       m_vArrows[0].Set( c_drawPosition + dir.ScalarMult(0.4f), dir, downDir.ScalarMult( -1.0f ), c_color, drawScale * 0.01f );
+       m_vArrows[1].Set( c_drawPosition + dir.ScalarMult(0.6f), dir, downDir.ScalarMult( -1.0f ), c_color, drawScale * 0.01f );
+       m_vArrows[2].Set( c_drawPosition + dir.ScalarMult(0.8f), dir, downDir.ScalarMult( -1.0f ), c_color, drawScale * 0.01f );
    }
    
    

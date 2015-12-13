@@ -28,6 +28,7 @@ private:
     float           m_time;
     float           m_timeDelta;
     float           m_timer;
+    float           m_timerSet;
     AlphanumDisplay m_dsp;
     float           m_W; //< wind direction from
     float           m_V; //< wind speed

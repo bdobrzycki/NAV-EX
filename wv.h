@@ -16,7 +16,7 @@ using namespace GrapheneMath;
 class WV //< wind vector
 {
 private:
-  const Vector3<GLfloat>    c_colorBlue;
+  const Vector3<GLfloat>    c_color;
   GLLine                    m_line;
   Vector3<float>            c_drawPosition;
   static const unsigned int c_numOfVArrows = 3;

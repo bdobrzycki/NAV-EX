@@ -4,6 +4,11 @@
 
 using namespace GrapheneMath;
 
+const Vector3<GLfloat> HelperLines::c_zeroVec( 0.0f, 0.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::c_xAxis  ( 1.0f, 0.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::c_yAxis  ( 0.0f, 1.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::c_zAxis  ( 0.0f, 0.0f, 1.0f );
+
 DeadReckoning::DeadReckoning()
     :  m_wv( Vector3<float>( 0.0f, 0.0f, 0.0f ) )
     ,  m_time( 0.0f )
@@ -122,6 +127,14 @@ void DeadReckoning::Update()
 
 void DeadReckoning::Draw()
 {
+    m_wv.Draw();
+    m_C152.Draw();
+    m_helperLines.draw();
+}
+
+/*
+void DeadReckoning::drawReferenceFrame()
+{
     static const Vector3<GLfloat> zeroVec( 0.0f, 0.0f, 0.0f );
     static const Vector3<GLfloat> xAxis( 1.0f, 0.0f, 0.0f );
     static const Vector3<GLfloat> yAxis( 0.0f, 1.0f, 0.0f );
@@ -141,7 +154,47 @@ void DeadReckoning::Draw()
     xAxisLine.Draw();
     yAxisLine.Draw();
     zAxisLine.Draw();
+}
+*/
 
-    m_wv.Draw();
-    m_C152.Draw();
+void DeadReckoning::drawHelperLines()
+{
+    static const Vector3<GLfloat> colorChartreuse( 0.498f, 1.0f, 0.0f );
+    static const Vector3<GLfloat> zeroVec( 0.0f, 0.0f, 0.0f );
+    static const float scale = 15.0f;
+
+    Vector3<float> windTo = m_wv.GetWV();
+    windTo.Normalise();
+
+    const Vector3<float> lateralAxis( -1.0f, 0.0f, 0.0f );
+    const Vector3<float> longitudinalAxis( 0.0f, 0.0f, 1.0f );
+
+    float windToDotLateral      = windTo.Dot( lateralAxis );
+    float windToDotLongitudinal = windTo.Dot( longitudinalAxis );
+
+    const GLLine lateralAxisLine( zeroVec, lateralAxis.ScalarMult( windToDotLateral * scale), colorChartreuse );
+    lateralAxisLine.Draw();
+    
+    const Vector3<float> dirNorth( 1.0f, 0.0f, 0.0f ); //< North is x axis.
+    const Vector3<float> downDir( 0.0f, -1.0f, 0.0f ); //< Clockwise rotation.
+    Quaternion<float> rot;
+    float angleRAD = 0.0f;
+    if( windToDotLateral > 0.0f )
+    {
+        if( windToDotLongitudinal > 0.0f )
+        {  angleRAD = GrapheneMath::PI_OVER_TWO + GrapheneMath::PI_OVER_TWO / 2.0f; }
+        else
+        {  angleRAD = GrapheneMath::PI + GrapheneMath::PI_OVER_TWO / 2.0f;  }
+    
+    }else
+    {
+        if( windToDotLongitudinal > 0.0f )
+        {  angleRAD = GrapheneMath::PI_OVER_TWO / 2.0f; }
+        else
+        {  angleRAD = 2.0f * GrapheneMath::PI - GrapheneMath::PI_OVER_TWO / 2.0f;  }
+    }
+    rot.FromAxisAngle( downDir, angleRAD );
+    const Vector3<float> helperDir = rot.RotateFast( dirNorth );
+    const GLLine helperLine( zeroVec, helperDir.ScalarMult( scale ), Vector3<GLfloat>( 0.498f, 0.7f, 0.0f ) );
+    helperLine.Draw();
 }

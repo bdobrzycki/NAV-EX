@@ -4,10 +4,30 @@
 
 using namespace GrapheneMath;
 
+const Vector3<GLfloat> HelperLines::Colors::c_redColor( 1.0f, 0.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::Colors::c_greenColor( 0.0f, 1.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::Colors::c_blueColor( 0.0f, 0.0f, 1.0f );
+const Vector3<GLfloat> HelperLines::Colors::c_chartreuseColor( 0.5f, 1.0f, 0.0f );
+const Vector3<GLfloat> HelperLines::Colors::c_lightChartreuseColor( 0.498f, 0.7f, 0.0f );
+
+const Vector3<GLfloat>& HelperLines::Colors::getColorFromIndex( const ColorIndex& idx )
+{
+    switch( idx )
+    {
+        case ColorIndex::eRed             : return c_redColor;
+        case ColorIndex::eGreen           : return c_greenColor;
+        case ColorIndex::eBlue            : return c_blueColor;
+        case ColorIndex::eChartreuse      : return c_chartreuseColor;
+        case ColorIndex::eLightChartreuse : return c_lightChartreuseColor;
+    }
+}
+
 const Vector3<GLfloat> HelperLines::c_zeroVec( 0.0f, 0.0f, 0.0f );
 const Vector3<GLfloat> HelperLines::c_xAxis  ( 1.0f, 0.0f, 0.0f );
 const Vector3<GLfloat> HelperLines::c_yAxis  ( 0.0f, 1.0f, 0.0f );
 const Vector3<GLfloat> HelperLines::c_zAxis  ( 0.0f, 0.0f, 1.0f );
+
+
 
 DeadReckoning::DeadReckoning()
     :  m_wv( Vector3<float>( 0.0f, 0.0f, 0.0f ) )
@@ -85,7 +105,12 @@ void DeadReckoning::Initialise()
         evaluateAnswer();
     }
 
+    // Make all helper lines invisible.
+    m_helperLines.m_lineVisibility.m_mask = 0;
+
     getInputParams();
+    makeReferenceFrame();
+    makeHelperLines();
 
     m_C152.SetPosition( Vector3<GLfloat>(0.0f, 0.0f, 0.0f) );
     m_C152.SetHDG( 90.0f ); // DEG
@@ -132,35 +157,20 @@ void DeadReckoning::Draw()
     m_helperLines.draw();
 }
 
-/*
-void DeadReckoning::drawReferenceFrame()
+void DeadReckoning::makeReferenceFrame()
 {
-    static const Vector3<GLfloat> zeroVec( 0.0f, 0.0f, 0.0f );
-    static const Vector3<GLfloat> xAxis( 1.0f, 0.0f, 0.0f );
-    static const Vector3<GLfloat> yAxis( 0.0f, 1.0f, 0.0f );
-    static const Vector3<GLfloat> zAxis( 0.0f, 0.0f, 1.0f );
+    m_helperLines.set( LineIdx::eRefFrameX, HelperLines::c_zeroVec, HelperLines::c_xAxis, ColorIdx::eRed );
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameX;
 
-    static const Vector3<GLfloat> colorRed(   1.0f, 0.0f, 0.0f );
-    static const Vector3<GLfloat> colorGreen( 0.0f, 1.0f, 0.0f );
-    static const Vector3<GLfloat> colorBlue(  0.0f, 0.0f, 1.0f );
-    static const Vector3<GLfloat> colorCyan(  0.0f, 1.0f, 1.0f );
-    static const Vector3<GLfloat> colorWhite( 1.0f, 1.0f, 1.0f );
-
-    static const GLLine xAxisLine( zeroVec, xAxis, colorRed);
-    static const GLLine yAxisLine( zeroVec, yAxis, colorGreen);
-    static const GLLine zAxisLine( zeroVec, zAxis, colorBlue);
-
-    // Draw World reference frame.
-    xAxisLine.Draw();
-    yAxisLine.Draw();
-    zAxisLine.Draw();
+    m_helperLines.set( LineIdx::eRefFrameY, HelperLines::c_zeroVec, HelperLines::c_yAxis, ColorIdx::eGreen );
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameY;
+    
+    m_helperLines.set( LineIdx::eRefFrameZ, HelperLines::c_zeroVec, HelperLines::c_zAxis, ColorIdx::eBlue );
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameZ;
 }
-*/
 
-void DeadReckoning::drawHelperLines()
+void DeadReckoning::makeHelperLines()
 {
-    static const Vector3<GLfloat> colorChartreuse( 0.498f, 1.0f, 0.0f );
-    static const Vector3<GLfloat> zeroVec( 0.0f, 0.0f, 0.0f );
     static const float scale = 15.0f;
 
     Vector3<float> windTo = m_wv.GetWV();
@@ -172,9 +182,13 @@ void DeadReckoning::drawHelperLines()
     float windToDotLateral      = windTo.Dot( lateralAxis );
     float windToDotLongitudinal = windTo.Dot( longitudinalAxis );
 
-    const GLLine lateralAxisLine( zeroVec, lateralAxis.ScalarMult( windToDotLateral * scale), colorChartreuse );
-    lateralAxisLine.Draw();
-    
+    m_helperLines.set( LineIdx::eLateralAxis,
+                       HelperLines::c_zeroVec,
+                       lateralAxis.ScalarMult( windToDotLateral * scale),
+                       ColorIdx::eChartreuse );
+                       
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis;
+
     const Vector3<float> dirNorth( 1.0f, 0.0f, 0.0f ); //< North is x axis.
     const Vector3<float> downDir( 0.0f, -1.0f, 0.0f ); //< Clockwise rotation.
     Quaternion<float> rot;
@@ -195,6 +209,11 @@ void DeadReckoning::drawHelperLines()
     }
     rot.FromAxisAngle( downDir, angleRAD );
     const Vector3<float> helperDir = rot.RotateFast( dirNorth );
-    const GLLine helperLine( zeroVec, helperDir.ScalarMult( scale ), Vector3<GLfloat>( 0.498f, 0.7f, 0.0f ) );
-    helperLine.Draw();
+
+    m_helperLines.set( LineIdx::eLateralAxis45,
+                       HelperLines::c_zeroVec,
+                       helperDir.ScalarMult( scale ),
+                       ColorIdx::eLightChartreuse );
+                       
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis45;
 }

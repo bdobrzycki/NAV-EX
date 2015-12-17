@@ -23,6 +23,8 @@ using namespace GrapheneMath;
 
 class HelperLines
 {
+public:
+
     struct LineIdx
     {
         enum Idx : int8_t
@@ -42,19 +44,49 @@ class HelperLines
 
     typedef LineIdx::Idx LineIndex;
 
-    struct ColorIdx
+    struct LineVisibility
     {
-        enum Idx : int8_t
+        enum Mask : int16_t
         {
-            eRed = 0,
-            eGreen,
-            eBlue,
-            eChartreuse,
-            eNumColors
+            eRefFrameX          = 1 << LineIdx::eRefFrameX,
+            eRefFrameY          = 1 << LineIdx::eRefFrameY,
+            eRefFrameZ          = 1 << LineIdx::eRefFrameZ,
+            eLateralAxis        = 1 << LineIdx::eLateralAxis,
+            eLongitudinalAxis   = 1 << LineIdx::eLongitudinalAxis,
+            eLateralAxis45      = 1 << LineIdx::eLateralAxis45,
+            eLateralAxis60      = 1 << LineIdx::eLateralAxis60,
+            eLongitudinalAxis45 = 1 << LineIdx::eLongitudinalAxis45,
+            eLongitudinalAxis60 = 1 << LineIdx::eLongitudinalAxis60,
         };
-    };
 
-    typedef ColorIdx::Idx ColorIndex;
+        int16_t m_mask = ~0; //< all lines visible
+
+    } m_lineVisibility;
+
+    struct Colors
+    {
+        struct ColorIdx
+        {
+            enum Idx : int8_t
+            {
+              eRed = 0,
+              eGreen,
+              eBlue,
+              eChartreuse,
+              eLightChartreuse,
+            };
+        };
+
+        typedef ColorIdx::Idx ColorIndex;
+
+        static const Vector3<GLfloat> c_redColor;
+        static const Vector3<GLfloat> c_greenColor;
+        static const Vector3<GLfloat> c_blueColor;
+        static const Vector3<GLfloat> c_chartreuseColor;
+        static const Vector3<GLfloat> c_lightChartreuseColor;
+
+        static const Vector3<GLfloat>& getColorFromIndex( const ColorIndex& );
+    };
 
     static const Vector3<GLfloat> c_zeroVec;
     static const Vector3<GLfloat> c_xAxis;
@@ -62,35 +94,42 @@ class HelperLines
     static const Vector3<GLfloat> c_zAxis;
 
 private:
-    std::vector<GLLine>             m_lines;
-    std::vector< Vector3<GLfloat> > m_colors;
+    std::vector<GLLine>  m_lines;
 
 public:
     HelperLines()
     {
         m_lines.resize( LineIndex::eNumLines );
-        m_colors.resize( ColorIndex::eNumColors );
     }
 
     void set( LineIndex               lineIdx,
               const Vector3<GLfloat>& from,
               const Vector3<GLfloat>& to,
-              ColorIndex              colorIdx )
+              Colors::ColorIndex      colorIdx )
     {
-        m_lines[lineIdx].Set( from, to, m_colors[colorIdx] );
+        m_lines[ lineIdx ].Set( from, to, Colors::getColorFromIndex( colorIdx ) );
     }
 
     void draw()
     {
-        for( uint8_t i = 0; i < m_lines.size(); ++i )
+        int16_t bit;
+        for( uint8_t i = 0; i < m_lines.size(); i++ )
         {
-            m_lines[i].Draw();
+            bit = 1 << i;
+            if( m_lineVisibility.m_mask & bit )
+            {
+                m_lines[i].Draw();
+            }
         }
     }
 };
 
 class DeadReckoning : public ApplicationModule
 {
+    typedef HelperLines::Colors::ColorIndex ColorIdx;
+    typedef HelperLines::LineVisibility::Mask Mask;
+    typedef HelperLines::LineIdx LineIdx;
+
 private:
     Aeroplane       m_C152;
     WV              m_wv;
@@ -107,8 +146,8 @@ private:
 
     void getInputParams();
     void evaluateAnswer();
+    void makeReferenceFrame();
     void makeHelperLines();
-    void drawHelperLines();
 
 public:
     DeadReckoning();

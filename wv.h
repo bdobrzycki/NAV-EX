@@ -23,15 +23,14 @@ private:
   std::vector<Varrow2D>     m_vArrows;
   Vector3<float>            m_wind;
   float                     m_dirFromDegT;
-  
-   
+
 public:
    WV( const Vector3<float>& drawPosition);
    void                 Set( float dirFromDegT, float speedKts ); //< from where the wind is blowing, deg True
    const Vector3<float> GetWV( void ) const { return m_wind; }  // kts = NM / H
    const float          GetDirFromDegT( void ) const { return m_dirFromDegT; } // kts = NM / H
    const float          GetMaxDriftAngleDeg( float speedKt );
-   void Draw() const; 
+   void Draw() const;
 };
 
 

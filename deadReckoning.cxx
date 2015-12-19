@@ -159,17 +159,22 @@ void DeadReckoning::Draw()
 
 void DeadReckoning::makeReferenceFrame()
 {
-    m_helperLines.set( LineIdx::eRefFrameX, HelperLines::c_zeroVec, HelperLines::c_xAxis, ColorIdx::eRed );
+    m_helperLines.set( LineIdx::eRefFrameX, HelperLines::c_zeroVec, HelperLines::c_xAxis, ColorIdx::eRed, DrawStyle::eSolid );
     m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameX;
 
-    m_helperLines.set( LineIdx::eRefFrameY, HelperLines::c_zeroVec, HelperLines::c_yAxis, ColorIdx::eGreen );
+    m_helperLines.set( LineIdx::eRefFrameY, HelperLines::c_zeroVec, HelperLines::c_yAxis, ColorIdx::eGreen, DrawStyle::eSolid );
     m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameY;
     
-    m_helperLines.set( LineIdx::eRefFrameZ, HelperLines::c_zeroVec, HelperLines::c_zAxis, ColorIdx::eBlue );
+    m_helperLines.set( LineIdx::eRefFrameZ, HelperLines::c_zeroVec, HelperLines::c_zAxis, ColorIdx::eBlue, DrawStyle::eSolid );
     m_helperLines.m_lineVisibility.m_mask |= Mask::eRefFrameZ;
 }
 
 void DeadReckoning::makeHelperLines()
+{
+    makeLateralLines();
+}
+
+void DeadReckoning::makeLateralLines()
 {
     static const float scale = 15.0f;
 
@@ -182,38 +187,70 @@ void DeadReckoning::makeHelperLines()
     float windToDotLateral      = windTo.Dot( lateralAxis );
     float windToDotLongitudinal = windTo.Dot( longitudinalAxis );
 
+    // lateral axis (reference)
     m_helperLines.set( LineIdx::eLateralAxis,
                        HelperLines::c_zeroVec,
                        lateralAxis.ScalarMult( windToDotLateral * scale),
-                       ColorIdx::eChartreuse );
+                       ColorIdx::eChartreuse,
+                       DrawStyle::eSolid );
                        
     m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis;
 
     const Vector3<float> dirNorth( 1.0f, 0.0f, 0.0f ); //< North is x axis.
-    const Vector3<float> downDir( 0.0f, -1.0f, 0.0f ); //< Clockwise rotation.
+    const Vector3<float> rotDir( 0.0f, 1.0f, 0.0f );   //< Counterclockwise rotation.
     Quaternion<float> rot;
-    float angleRAD = 0.0f;
-    if( windToDotLateral > 0.0f )
+
+    float angleLateralAxis45 = GrapheneMath::Deg2Rad( 45.0f );
+    float angleLateralAxis60 = GrapheneMath::Deg2Rad( 60.0f );
+
+    // Quadrant starts from I(+,+), quadrant numbering goes counterclockwise.
+    if( windToDotLateral > 0.0f ) // III or IV quadrant
     {
-        if( windToDotLongitudinal > 0.0f )
-        {  angleRAD = GrapheneMath::PI_OVER_TWO + GrapheneMath::PI_OVER_TWO / 2.0f; }
-        else
-        {  angleRAD = GrapheneMath::PI + GrapheneMath::PI_OVER_TWO / 2.0f;  }
-    
-    }else
-    {
-        if( windToDotLongitudinal > 0.0f )
-        {  angleRAD = GrapheneMath::PI_OVER_TWO / 2.0f; }
-        else
-        {  angleRAD = 2.0f * GrapheneMath::PI - GrapheneMath::PI_OVER_TWO / 2.0f;  }
+        if( windToDotLongitudinal > 0.0f ) // IV quadrant
+        {
+            angleLateralAxis45 += GrapheneMath::PI;
+            angleLateralAxis60 += GrapheneMath::PI;
+        }
+        else                               // III quadrant
+        {
+            angleLateralAxis45 = GrapheneMath::PI - angleLateralAxis45;
+            angleLateralAxis60 = GrapheneMath::PI - angleLateralAxis60;
+        }
     }
-    rot.FromAxisAngle( downDir, angleRAD );
-    const Vector3<float> helperDir = rot.RotateFast( dirNorth );
+    else  // I or II quadrant
+    {
+        if( windToDotLongitudinal > 0.0f ) // I quadrant
+        {
+            angleLateralAxis45 = -angleLateralAxis45;
+            angleLateralAxis60 = -angleLateralAxis60;
+        }
+        else                               // II quadrant
+        {
+            // angles are set already
+        }
+    }
+
+    // 45 DEG helper line
+    rot.FromAxisAngle( rotDir, angleLateralAxis45 );
+    Vector3<float> helperDir = rot.RotateFast( dirNorth );
 
     m_helperLines.set( LineIdx::eLateralAxis45,
                        HelperLines::c_zeroVec,
                        helperDir.ScalarMult( scale ),
-                       ColorIdx::eLightChartreuse );
-                       
-    m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis45;
+                       ColorIdx::eLightChartreuse,
+                       DrawStyle::eSolid );
+
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis45; 
+
+    // 60 DEG helper line
+    rot.FromAxisAngle( rotDir, angleLateralAxis60 );
+    helperDir = rot.RotateFast( dirNorth );
+
+    m_helperLines.set( LineIdx::eLateralAxis60,
+                       HelperLines::c_zeroVec,
+                       helperDir.ScalarMult( scale ),
+                       ColorIdx::eLightChartreuse,
+                       DrawStyle::eStipple );
+
+    m_helperLines.m_lineVisibility.m_mask |= Mask::eLateralAxis60;
 }

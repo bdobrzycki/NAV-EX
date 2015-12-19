@@ -85,5 +85,15 @@ public:
     glVertex3f( to[0], to[1], to[2] );
     glEnd();
   }
+  
+  void DrawStipple() const
+  {
+    glLineStipple( 4, 0xAAAA );
+    glEnable(GL_LINE_STIPPLE);
+
+    Draw();
+
+    glDisable(GL_LINE_STIPPLE);
+  }
 };
 #endif //__GLLINE_H__

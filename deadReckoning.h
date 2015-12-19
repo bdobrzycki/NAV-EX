@@ -63,6 +63,15 @@ public:
 
     } m_lineVisibility;
 
+    struct LineDrawStyle
+    {
+        enum Style : int16_t
+        {
+            eSolid   = 1 << 0,
+            eStipple = 1 << 1,
+        };
+    };
+
     struct Colors
     {
         struct ColorIdx
@@ -94,7 +103,13 @@ public:
     static const Vector3<GLfloat> c_zAxis;
 
 private:
-    std::vector<GLLine>  m_lines;
+    struct GLStyleLine
+    {
+        GLLine                m_line;
+        LineDrawStyle::Style  m_style;
+    };
+
+    std::vector<GLStyleLine>  m_lines;
 
 public:
     HelperLines()
@@ -105,9 +120,11 @@ public:
     void set( LineIndex               lineIdx,
               const Vector3<GLfloat>& from,
               const Vector3<GLfloat>& to,
-              Colors::ColorIndex      colorIdx )
+              Colors::ColorIndex      colorIdx,
+              LineDrawStyle::Style    style )
     {
-        m_lines[ lineIdx ].Set( from, to, Colors::getColorFromIndex( colorIdx ) );
+        m_lines[ lineIdx ].m_line.Set( from, to, Colors::getColorFromIndex( colorIdx ) );
+        m_lines[ lineIdx ].m_style = style;
     }
 
     void draw()
@@ -118,7 +135,20 @@ public:
             bit = 1 << i;
             if( m_lineVisibility.m_mask & bit )
             {
-                m_lines[i].Draw();
+                switch( m_lines[i].m_style )
+                {
+                    case LineDrawStyle::Style::eSolid :
+                      m_lines[i].m_line.Draw();
+                      break;
+
+                    case LineDrawStyle::Style::eStipple :
+                      m_lines[i].m_line.DrawStipple();
+                      break;
+
+                    default:
+                      m_lines[i].m_line.Draw();
+                      break;
+                }
             }
         }
     }
@@ -129,6 +159,7 @@ class DeadReckoning : public ApplicationModule
     typedef HelperLines::Colors::ColorIndex ColorIdx;
     typedef HelperLines::LineVisibility::Mask Mask;
     typedef HelperLines::LineIdx LineIdx;
+    typedef HelperLines::LineDrawStyle::Style DrawStyle;
 
 private:
     Aeroplane       m_C152;
@@ -148,6 +179,7 @@ private:
     void evaluateAnswer();
     void makeReferenceFrame();
     void makeHelperLines();
+    void makeLateralLines();
 
 public:
     DeadReckoning();
